@@ -5,6 +5,8 @@ import LL.Language
 import Data.Function
 import Data.List
 import Data.Maybe
+import Data.Tuple
+import Lab6
 
 {--------------------------------------------------------------------------------
 
@@ -80,6 +82,7 @@ interaction:
         multiplied:      4      recursive:       3      slota:           6      slotb:           5
         vala2:           1      valb:            1      valb2:           1      valble0:         2
         valbminus1:      2
+
 
 Note that the LLVM format supported by the tests code is our LLVMlite, and so
 is significantly less than full LLVM.  In addition to limiting the range of
@@ -162,9 +165,19 @@ used in a given block interference (even if they might not).
 --------------------------------------------------------------------------------}
 
 interferenceGraph :: Cfg -> Liveness -> Graph String
-interferenceGraph = error "Unimplemented"
+interferenceGraph cfg (ln:lns) = [(n,concat adj)]
+                            where n   = fst ln
+                                  adj = nub (liveins ++ defs)
+                                        where liveins = map snd lns
+                                              defs = map snd (map snd (useDefs cfg))
 
 -- every var interference = livin U defs
+-- get every var from livin and defs and make then adjacent to one another
+-- usedefs cfg = [("blockname",([uses],[defs]))]
+-- livein = [("blockname",[liveins])]
+-- create tuple for every elem in [livins] ++ [defs] first elem being one elem in
+-- list followed by the rest
+
 
 {-------------------------------------------------------------------------------
 
@@ -186,7 +199,26 @@ registers for a given interference graph.
 -------------------------------------------------------------------------------}
 
 registerColoring :: Graph String -> [(String, Int)]
-registerColoring = error "Unimplemented"
+registerColoring (var:vars) = [(v,n)]
+                                where (v,xs) = (v,shortest xs)
+                                          -- n = ifInListInc 1 v
+
+ifInListInc :: Int -> a -> [a] -> Int
+ifInListInc n v xs = if (elem v xs) then n+1 else n              
+
+
+ 
+--rlookup :: --a -> [(a,a)] -> Maybe a
+--rlookup x (l:ls) = lookup x (map swap ls)
+
+shortest :: [[a]] -> [a]
+shortest [] = []
+shortest [y] = y
+shortest (x:y:list)
+    | length x > length y = shortest (y:list)
+    | otherwise = shortest (x:list)
+
+
 
 --each var that is adjaecnt to var1 needs a different color
 -- pick node with lowest degree 1st
