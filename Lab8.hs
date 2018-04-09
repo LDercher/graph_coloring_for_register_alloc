@@ -165,11 +165,16 @@ used in a given block interference (even if they might not).
 --------------------------------------------------------------------------------}
 
 interferenceGraph :: Cfg -> Liveness -> Graph String
-interferenceGraph cfg (ln:lns) = [(n,concat adj)]
-                            where n   = fst ln
+interferenceGraph (first,rest) lns = (n,concat adj)
+                            where blocks = ("^",first) : rest
+                                  n   = map fst lns
                                   adj = nub (liveins ++ defs)
                                         where liveins = map snd lns
-                                              defs = map snd (map snd (useDefs cfg))
+                                              defs = map snd (map snd (useDefs blocks))
+
+
+cartProd :: [a] -> [b] -> [(a,b)]
+cartProd xs ys = [(x,y) | x <- xs, y <- ys]
 
 -- every var interference = livin U defs
 -- get every var from livin and defs and make then adjacent to one another
@@ -199,15 +204,20 @@ registers for a given interference graph.
 -------------------------------------------------------------------------------}
 
 registerColoring :: Graph String -> [(String, Int)]
-registerColoring (var:vars) = [(v,n)]
-                                where (v,xs) = (v,shortest xs)
+registerColoring graph = foldr (\(node,neigh) colors -> (node, checkColor colors neigh) : colors) [] graph
+    
+    
+    --[(v,n)]
+                                --where (v,xs) = (v,shortest xs)
                                           -- n = ifInListInc 1 v
+            
 
-ifInListInc :: Int -> a -> [a] -> Int
-ifInListInc n v xs = if (elem v xs) then n+1 else n              
+checkColor :: [(String,Int)] -> [String] -> Int
+checkColor col neigh = fst (head compCols)
+                        where interSet i = (i, map fst (filter (\(n,c)-> c == i) col ))
+                              matchNodes = map interSet [1..]
+                              compCols = filter (\(c,n)-> null (intersect n neigh)) matchNodes
 
-
- 
 --rlookup :: --a -> [(a,a)] -> Maybe a
 --rlookup x (l:ls) = lookup x (map swap ls)
 
