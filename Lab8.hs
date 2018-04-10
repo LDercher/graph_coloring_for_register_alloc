@@ -165,16 +165,15 @@ used in a given block interference (even if they might not).
 --------------------------------------------------------------------------------}
 
 interferenceGraph :: Cfg -> Liveness -> Graph String
-interferenceGraph (first,rest) lns = (n,concat adj)
+interferenceGraph (first,rest) lns = map (\n -> (n, map snd (filter (\(a,b) -> a == n) cpds))) varnames
                             where blocks = ("^",first) : rest
-                                  n   = map fst lns
-                                  adj = nub (liveins ++ defs)
-                                        where liveins = map snd lns
-                                              defs = map snd (map snd (useDefs blocks))
+                                  ints = map (\(n, (instrs, t)) -> union (fromJust( lookup n lns)) (concatMap definedIn instrs)) blocks                                 
+                                  cpds = filter (\(a,b) -> a /= b)(nub (concatMap cartProd ints))
+                                  varnames = nub (map fst cpds)
 
 
-cartProd :: [a] -> [b] -> [(a,b)]
-cartProd xs ys = [(x,y) | x <- xs, y <- ys]
+cartProd :: [String] -> [(String,String)]
+cartProd xs = [(x,y) | x <- xs, y <- xs]
 
 -- every var interference = livin U defs
 -- get every var from livin and defs and make then adjacent to one another
@@ -206,20 +205,13 @@ registers for a given interference graph.
 registerColoring :: Graph String -> [(String, Int)]
 registerColoring graph = foldr (\(node,neigh) colors -> (node, checkColor colors neigh) : colors) [] graph
     
-    
-    --[(v,n)]
-                                --where (v,xs) = (v,shortest xs)
-                                          -- n = ifInListInc 1 v
-            
+
 
 checkColor :: [(String,Int)] -> [String] -> Int
 checkColor col neigh = fst (head compCols)
                         where interSet i = (i, map fst (filter (\(n,c)-> c == i) col ))
                               matchNodes = map interSet [1..]
                               compCols = filter (\(c,n)-> null (intersect n neigh)) matchNodes
-
---rlookup :: --a -> [(a,a)] -> Maybe a
---rlookup x (l:ls) = lookup x (map swap ls)
 
 shortest :: [[a]] -> [a]
 shortest [] = []
