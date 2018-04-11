@@ -232,3 +232,7 @@ What does this say about the combination of statements into basic blocks in
 factrec.ll?  Would you expect this to be true in general?
 
 -------------------------------------------------------------------------------}
+
+{--The combination of statements into basic blocks in factrec.ll was less efficient. The factrec2 implmentation needed one less register. 
+    It seems the spreading of statements into more blocks allow for better register usage. Yes, it is more advantagous as far as register usage
+    to spread the statements into more blocks --}
