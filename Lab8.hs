@@ -165,11 +165,11 @@ used in a given block interference (even if they might not).
 --------------------------------------------------------------------------------}
 
 interferenceGraph :: Cfg -> Liveness -> Graph String
-interferenceGraph (first,rest) lns = map (\n -> (n, map snd (filter (\(a,b) -> a == n) cpds))) varnames
+interferenceGraph (first,rest) lns = map (\n -> (n, map snd (filter (\(a,b) -> a == n) crossp))) vars
                             where blocks = ("^",first) : rest
                                   ints = map (\(n, (instrs, t)) -> union (fromJust( lookup n lns)) (concatMap definedIn instrs)) blocks                                 
-                                  cpds = filter (\(a,b) -> a /= b)(nub (concatMap cartProd ints))
-                                  varnames = nub (map fst cpds)
+                                  crossp = filter (\(a,b) -> a /= b)(nub (concatMap cartProd ints))
+                                  vars = nub (map fst crossp)
 
 
 cartProd :: [String] -> [(String,String)]
